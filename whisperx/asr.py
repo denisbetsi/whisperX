@@ -223,8 +223,13 @@ class FasterWhisperPipeline(Pipeline):
             offset=self._vad_params["vad_offset"],
         )
         if self.tokenizer is None:
-            detected_language, language_probability = self.detect_language(audio)
-            language = language or detected_language
+            # Only detect language if none was provided
+            if language is None:
+                detected_language, language_probability = self.detect_language(audio)
+                language = detected_language
+            else:
+                language_probability = None
+                
             task = task or "transcribe"
             self.tokenizer = Tokenizer(
                 self.model.hf_tokenizer,
