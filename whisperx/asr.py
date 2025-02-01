@@ -223,7 +223,8 @@ class FasterWhisperPipeline(Pipeline):
             offset=self._vad_params["vad_offset"],
         )
         if self.tokenizer is None:
-            language = language or self.detect_language(audio)
+            detected_language, language_probability = self.detect_language(audio)
+            language = language or detected_language
             task = task or "transcribe"
             self.tokenizer = Tokenizer(
                 self.model.hf_tokenizer,
@@ -233,6 +234,7 @@ class FasterWhisperPipeline(Pipeline):
             )
         else:
             language = language or self.tokenizer.language_code
+            language_probability = None
             task = task or self.tokenizer.task
             if task != self.tokenizer.task or language != self.tokenizer.language_code:
                 self.tokenizer = Tokenizer(
@@ -279,9 +281,13 @@ class FasterWhisperPipeline(Pipeline):
         if self.suppress_numerals:
             self.options = replace(self.options, suppress_tokens=previous_suppress_tokens)
 
-        return {"segments": segments, "language": language}
+        return {
+            "segments": segments, 
+            "language": language,
+            "language_probability": language_probability
+        }
 
-    def detect_language(self, audio: np.ndarray) -> str:
+    def detect_language(self, audio: np.ndarray) -> tuple[str, float]:
         if audio.shape[0] < N_SAMPLES:
             print("Warning: audio is shorter than 30s, language detection may be inaccurate.")
         model_n_mels = self.model.feat_kwargs.get("feature_size")
@@ -293,7 +299,7 @@ class FasterWhisperPipeline(Pipeline):
         language_token, language_probability = results[0][0]
         language = language_token[2:-2]
         print(f"Detected language: {language} ({language_probability:.2f}) in first 30s of audio...")
-        return language
+        return language, language_probability
 
 
 def load_model(
@@ -364,8 +370,8 @@ def load_model(
         "without_timestamps": True,
         "max_initial_timestamp": 0.0,
         "word_timestamps": False,
-        "prepend_punctuations": "\"'“¿([{-",
-        "append_punctuations": "\"'.。,，!！?？:：”)]}、",
+        "prepend_punctuations": "\"'""¿([{-",
+        "append_punctuations": "\"'.。,，!！?？:："")]}、",
         "multilingual": model.model.is_multilingual,
         "suppress_numerals": False,
         "max_new_tokens": None,
