@@ -410,7 +410,7 @@ def load_model(
         if vad_method == "silero":
             vad_model = Silero(**default_vad_options)
         elif vad_method == "pyannote":
-            vad_model = Pyannote(torch.device(device), use_auth_token=None, **default_vad_options)
+            vad_model = Pyannote(torch.device(device), token=None, **default_vad_options)
         else:
             raise ValueError(f"Invalid vad_method: {vad_method}")
 

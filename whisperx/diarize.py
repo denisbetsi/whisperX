@@ -12,12 +12,12 @@ class DiarizationPipeline:
     def __init__(
         self,
         model_name="pyannote/speaker-diarization-3.1",
-        use_auth_token=None,
+        token=None,
         device: Optional[Union[str, torch.device]] = "cpu",
     ):
         if isinstance(device, str):
             device = torch.device(device)
-        self.model = Pipeline.from_pretrained(model_name, token=use_auth_token).to(device)
+        self.model = Pipeline.from_pretrained(model_name, token).to(device)
 
     def __call__(
         self,

@@ -243,7 +243,7 @@ def cli():
         tmp_results = results
         print(">>Performing diarization...")
         results = []
-        diarize_model = DiarizationPipeline(use_auth_token=hf_token, device=device)
+        diarize_model = DiarizationPipeline(token=hf_token, device=device)
         for result, input_audio_path in tmp_results:
             diarize_segments = diarize_model(input_audio_path, min_speakers=min_speakers, max_speakers=max_speakers)
             result = assign_word_speakers(diarize_segments, result)

@@ -17,7 +17,7 @@ from tqdm import tqdm
 from whisperx.diarize import Segment as SegmentX
 from whisperx.vads.vad import Vad
 
-def load_vad_model(device, vad_onset=0.500, vad_offset=0.363, use_auth_token=None, model_fp=None):
+def load_vad_model(device, vad_onset=0.500, vad_offset=0.363, token=None, model_fp=None):
     model_dir = torch.hub._get_torch_home()
 
     main_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,7 +39,7 @@ def load_vad_model(device, vad_onset=0.500, vad_offset=0.363, use_auth_token=Non
 
     model_bytes = open(model_fp, "rb").read()
 
-    vad_model = Model.from_pretrained(model_fp, token=use_auth_token)
+    vad_model = Model.from_pretrained(model_fp, token=token)
     hyperparameters = {"onset": vad_onset,
                     "offset": vad_offset,
                     "min_duration_on": 0.1,
@@ -191,11 +191,11 @@ class VoiceActivitySegmentation(VoiceActivityDetection):
             self,
             segmentation: PipelineModel = "pyannote/segmentation",
             fscore: bool = False,
-            use_auth_token: Union[Text, None] = None,
+            token: Union[Text, None] = None,
             **inference_kwargs,
     ):
 
-        super().__init__(segmentation=segmentation, fscore=fscore, use_auth_token=use_auth_token, **inference_kwargs)
+        super().__init__(segmentation=segmentation, fscore=fscore, token=token, **inference_kwargs)
 
     def apply(self, file: AudioFile, hook: Optional[Callable] = None) -> Annotation:
         """Apply voice activity detection
@@ -233,10 +233,10 @@ class VoiceActivitySegmentation(VoiceActivityDetection):
 
 class Pyannote(Vad):
 
-    def __init__(self, device, use_auth_token=None, model_fp=None, **kwargs):
+    def __init__(self, device, token=None, model_fp=None, **kwargs):
         print(">>Performing voice activity detection using Pyannote...")
         super().__init__(kwargs['vad_onset'])
-        self.vad_pipeline = load_vad_model(device, use_auth_token=use_auth_token, model_fp=model_fp)
+        self.vad_pipeline = load_vad_model(device, token, model_fp=model_fp)
 
     def __call__(self, audio: AudioFile, **kwargs):
         return self.vad_pipeline(audio)
